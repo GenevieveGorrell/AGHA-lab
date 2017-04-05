@@ -1,0 +1,1007 @@
+<html>
+<head>
+<title>GHA Lab 1.01</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+</head>
+
+<body bgcolor="#99BBAA">
+<center>
+<H1>GHA Lab 1.01 Manual</H1>
+<H2>Genevieve Gorrell</H2>
+<H2>g.gorrell 'at' sheffield.ac.uk</H2>
+</center>
+
+<H3>Contents</H3>
+
+<UL>
+<LI><a href=#introduction>Introduction</a>
+<LI><a href=#theory>Theory</a>
+<LI><a href=#scenarios>Scenarios</a>
+  <UL>
+  <LI><a href=#scen1>Simple singular decomposition performed on a matrix of word bigram data</a>
+  <LI><a href=#scen2>Singular value decomposition of streamed bigram data</a>
+  <LI><a href=#scen3>Simple Latent Semantic Analysis</a>
+  <LI><a href=#scen4>Latent Semantic Analysis performed using the Generalized Hebbian Algorithm on streamed data.</a>
+  </UL>
+<LI><a href=#commands>Command Summary</a>
+</UL>
+
+<table width=100%><tr>
+<td><a name=introduction><H3>Introduction</H3></a></td>
+<td align=right>(<a href=#>top</a>)</td>
+</tr></table>
+
+GHA Lab is an open source command-line experimentation environment
+written in Java. It allows small scale experimentation with Latent
+Semantic Analysis and a number of associated experimental techniques
+such the Generalized Hebbian Algorithm (GHA) and its extension to
+paired data, the Asymmetric Generalized Hebbian Algorithm (AGHA)
+(Gorrell 2005, Gorrell 2006). For example, the following can be
+readily accomplished:
+
+<UL>
+<LI>A textual corpus can be transformed into a matrix of wordbags by line or paragraph, such as is typical for LSA
+<LI>A textual corpus can be transformed into a matrix of word by history n-gram counts
+<LI>Matrices can be preprocessed using the popular entropy-based row normalisation step shown to improve the performance of LSA
+<LI>Eigen and singular value decomposition can be performed on matrices using a simple powers method implementation
+<LI>Eigen decomposition can be performed incrementally on corpora using GHA
+<LI>Singular value decomposition can be performed incrementally on the n-grams in corpora using AGHA
+<LI>Random Indexing can be included in the above processes
+<LI>Data can be viewed in a variety of formats
+<LI>Decompositions can be saved and reloaded
+</UL>
+
+The environment allows the behaviour of the various approaches to be
+investigated. The GHA implementations allow a reference decomposition
+to be used, such that proximity to this target is presented as the
+algorithms converge. This means that the performance of the algorithms
+can be qualitatively examined. Other users may be primarily interested
+in a more conventional approach to LSA. GHA Lab provides a simple open
+source implementation of LSA.</br></br>
+
+Install GHA Lab by unpacking the zip file and compiling using the
+script appropriate to your operating system. The compile scripts are
+located in the "dist" directory and should be run from there. Class
+files are included to satisfy mutual dependencies during compilation
+but you are recommended to compile using your own compiler before
+use. You will need "javac" to use these scripts. After compiling, run
+by navigating to the dist directory if you haven't already and
+entering,</br></br>
+
+java gen.nlp.svd.Lab</br></br>
+
+The next section introduces the relevant concepts. The following
+section describes usage of the program in the form of likely usage
+scenarios. This is a good place to start getting a feel for what GHA
+Lab can be used for. A command summary concludes.</br></br>
+
+<a href=lab_manual.htm>Here</a> is the manual for the old LAB, an
+earlier incarnation. GHA Lab 1.0 presents significant improvements on
+LAB, including a more flexible and intuitive interface, improved help
+and a large number of new methods.</br></br>
+
+All test corpora used, source and class files, compile scripts for
+both Linux and Windows and this manual are included in the zip file
+ghalab1.zip. Please report bugs to me, Genevieve Gorrell, at the email
+address given above.
+
+<p align=right>(<a href=#introduction>back to beginning of introduction</a>)</p>
+
+<table width=100%><tr>
+<td><a name=theory><H3>Theory</H3></a></td>
+<td align=right>(<a href=#>top</a>)</td>
+</tr></table>
+
+This section will provide an overview of the theory behind the
+techniques incorporated into GHA Lab. The techniques at the core of
+the program are <b>eigen decomposition</b> and <b>singular value
+decomposition</b>. These two are closely related. Eigen decomposition
+provides an efficient factorisation of a square symmetrical
+matrix. The factorisation thus produced has proved beneficial in a
+variety of applications, and is therefore of general
+interest. Singular value decomposition extends the technique to
+arbitrary rectangular matrices. The factorisation takes the form of a
+set (or pair of sets in the case of singular value decomposition) of
+orthogonal vectors, eigen/singular vectors with associated
+eigen/singular values. By discarding the vectors with the smallest
+values an approximation can be created. The approximation has a
+variety of potential advantages, that provide the motivation for using
+the technique in many cases. Generalisations can be created, and noise
+and overfitting can be discarded.</br></br>
+
+<b>Latent Semantic Analysis</b> is a popular technique based on
+singular value decomposition. A set of documents or textual passages
+are formed into a matrix in which documents form columns and unique
+words, rows. The matrix is populated using the count of each word in
+each document. A preprocessing step may be performed at this stage to
+increase the impact of more significant words. At this stage, the
+matrix can be thought of as a representation of documents (or words)
+in a vector space; matrix columns (or rows) are vectors describing a
+position in hyperspace, and similarity between documents (or words)
+can be thought of as the distance between the points. Singular value
+decomposition is then performed on the matrix, and the smaller of the
+singular vectors discarded (a couple of hundred are normally
+retained). The approximation typically constitutes an
+improvement. Semantically similar documents are brought closer
+together.</br></br>
+
+The <b>Generalized Hebbian Algorithm</b> is an algorithm for
+performing eigen decomposition on a dataset based on singlue
+observations presented serially. In other words, rather than forming
+for example the corpus into a matrix and performing eigen
+decomposition on that, GHA takes individual wordbag vectors and learns
+from them the eigen decomposition of the dataset. Advantages to this
+include that if the dataset is very large or "infinite" (such as the
+internet) GHA provides a way to acquire the eigen decomposition that
+more conventional approaches wouldn't allow. The <b>Asymmetric
+Generalized Hebbian Algorithm</b> extends the approach to paired data,
+which effectively means that it performs singular value
+decomposition. The proviso is that the implied matrix, the singular
+value decomposition of which we wish to obtain, constitutes the
+additive total of the outer product of the vector pairs.</br></br>
+
+A more conventional approach to eigen/singular value decomposition is
+included in GHA Lab, in the form of a simple implementation of the
+<b>powers method</b>. The powers method calculates the eigen
+decomposition of a matrix using the fact that a randomly initialised
+vector repeatedly multiplied by a matrix will converge on the
+strongest eigenvalue of that matrix. Inclusion of this approach
+provides an illustrative contrast to GHA and AGHA. Notice that it runs
+on a matrix, where GHA and AGHA can be run directly on corpora. The
+powers method is a batch approach and lacks the incrementality of
+GHA.</br></br>
+
+An ongoing issue with vector space methods is tractability. For
+example, the wordbag vectors of LSA have a dimensionality equal to the
+size of the vocabulary in the corpus. This can become large. <b>Random
+Indexing</b> is a technique which reduces vector dimensionality by
+replacing orthogonal word vectors with almost orthogonal random
+vectors. Where dimensionality is very large, substantial reductions
+can be introduced with minimal loss of accuracy. Where GHA Lab
+provides an option to specify a dimensionality, Random Indexing is
+being used to do this. One interesting experiment that can be done
+with GHA Lab is investigating the impact Random Indexing has on
+accuracy at various dimensionalities.</br></br>
+
+GHA Lab is not intended for large scale work. For large scale batch
+eigen decomposition and SVD of sparse data, use SVDLIBC. At the time
+of writing I don't know of a freely available GHA or AGHA
+implementation for large-scale work.
+
+<p align=right>(<a href=#theory>back to beginning of theory</a>)</p>
+
+<table width=100%><tr>
+<td><a name=scenarios><H3>Scenarios</H3></a></td>
+<td align=right>(<a href=#>top</a>)</td>
+</tr></table>
+
+Usage of GHA Lab might usefully be illustrated by walking through a
+number of likely scenarios. The scenarios that will be described here
+are the following:
+
+<UL>
+<LI><a href=#scen1>Simple singular decomposition performed on a matrix of word bigram data</a>
+<LI><a href=#scen2>Singular value decomposition of streamed bigram data</a>
+<LI><a href=#scen3>Simple Latent Semantic Analysis</a>
+<LI><a href=#scen4>Latent Semantic Analysis performed using the Generalized Hebbian Algorithm on streamed data.</a>
+</UL>
+
+<table width=100%><tr>
+<td><a name=scen1><H4>Simple singular value decomposition performed on a matrix of word
+bigram data</H4></a></td>
+<td align=right>(<a href=#scenarios>scenarios top</a>)(<a href=#>top</a>)</td>
+</tr></table>
+
+First we load the corpus and transform it into a matrix of bigram
+counts. We examine this matrix.</br></br>
+
+<table bgcolor=99cccc width=100%><tr><td>
+<font face=courier,monospace size=-1>
+LAB> C=corpus(man_dog_corpus.txt)</br>
+LAB> M=ngram(C,2,0,0)</br>
+LAB> printvisual(M)</br></br>
+
+&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp man&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp hits&nbsp&nbsp&nbsp the&nbsp&nbsp&nbsp&nbsp ball&nbsp&nbsp&nbsp at&nbsp&nbsp&nbsp&nbsp&nbsp dog&nbsp&nbsp&nbsp&nbsp house&nbsp&nbsp takes&nbsp&nbsp to&nbsp&nbsp&nbsp&nbsp&nbsp walks&nbsp&nbsp a&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp in&nbsp&nbsp&nbsp&nbsp&nbsp small&nbsp&nbsp nice&nbsp&nbsp&nbsp barks</br>
+a&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.03&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.03&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.01&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.01&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+man&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.04&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.02&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.07&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+hits&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.05&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.01&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+the&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.1&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.07&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.1&nbsp&nbsp&nbsp&nbsp 0.05&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+ball&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.03&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.02&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.04&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+at&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.02&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+takes&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.04&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+dog&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.01&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.02&nbsp&nbsp&nbsp 0.02&nbsp&nbsp&nbsp 0.02&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.01</br>
+to&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.07&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+walks&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.02&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.01&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.01&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+in&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.01&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+every&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.01&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.01&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.01&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.01&nbsp&nbsp&nbsp 0.0</br>
+small&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.01&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+nice&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.01&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0
+
+</font>
+</td></tr></table>
+</br>
+
+We perform singular value decomposition on the matrix using the batch
+"powers" approach. We then qualitatively examine the resulting
+singular vector set by looking at the three words each vector most
+resembles. Note also the use of "printall" to check the objects we
+have in memory.</br></br>
+
+<table bgcolor=99cccc width=100%><tr><td>
+<font face=courier,monospace size=-1>
+
+LAB> V=svdbatch(M,5,0)</br>
+ Start time: Wed Oct 11 09:52:58 GMT 2006</br></br>
+
+ Calculating singular value decomposition. Values are:</br></br>
+
+&nbsp&nbsp 0.17068256</br></br>
+
+&nbsp&nbsp 0.09967616</br></br>
+
+&nbsp&nbsp 0.09005333</br></br>
+
+&nbsp&nbsp 0.05212273</br></br>
+
+&nbsp&nbsp 0.025689691</br></br></br>
+
+
+ End time: Wed Oct 11 09:52:58 GMT 2006</br></br>
+
+LAB> printall()</br></br>
+
+ C, corpus, filename "man_dog_corpus.txt"</br>
+ M, matrix, 14 columns, 15 rows</br>
+ V, vectorset, 5 left vectors, 5 right vectors</br></br>
+
+LAB> print(V,3)</br></br>
+
+Vector number 0, first value:0.17068256, second value:0.17068256</br>
+the&nbsp&nbsp&nbsp 0.96920514&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp man&nbsp&nbsp&nbsp 0.6144454</br>
+a&nbsp&nbsp&nbsp&nbsp&nbsp 0.22091898&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp dog&nbsp&nbsp&nbsp 0.58846974</br>
+every&nbsp 0.09670378&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp ball&nbsp&nbsp 0.44198397</br></br></br>
+
+
+Vector number 1, first value:0.09967616, second value:0.09967616</br>
+to&nbsp&nbsp&nbsp&nbsp 0.70082206&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp the&nbsp&nbsp&nbsp 0.99793243</br>
+hits&nbsp&nbsp 0.50567687&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp a&nbsp&nbsp&nbsp&nbsp&nbsp 0.050731957</br>
+takes&nbsp 0.40046972&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp to&nbsp&nbsp&nbsp&nbsp 0.0289294</br></br></br>
+
+
+Vector number 2, first value:0.09005333, second value:0.09005333</br>
+man&nbsp&nbsp&nbsp 0.89708906&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp walks&nbsp 0.7729583</br>
+dog&nbsp&nbsp&nbsp 0.3405606&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp hits&nbsp&nbsp 0.52953416</br>
+ball&nbsp&nbsp 0.2799046&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp takes&nbsp 0.27487043</br></br></br>
+
+
+Vector number 3, first value:0.05212273, second value:0.05212273</br>
+ball&nbsp&nbsp 0.90336347&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp to&nbsp&nbsp&nbsp&nbsp 0.7921261</br>
+dog&nbsp&nbsp&nbsp 0.1832631&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp at&nbsp&nbsp&nbsp&nbsp 0.3466293</br>
+walks&nbsp 0.14879759&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp hits&nbsp&nbsp 0.28227165</br></br></br>
+
+
+Vector number 4, first value:0.025689691, second value:0.025689691</br>
+a&nbsp&nbsp&nbsp&nbsp&nbsp 0.93222916&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp ball&nbsp&nbsp 0.5344488</br>
+every&nbsp 0.147306&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp small&nbsp 0.3628805</br>
+small&nbsp 0.12495394&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp man&nbsp&nbsp&nbsp 0.3210028
+
+</font>
+</td></tr></table>
+</br>
+
+It is interesting to examine the vectorset in the matrix format we
+began with. It makes it easy to see the effect of dimensionality
+reduction on the data. We do this by reconstructing the matrix from a
+reduced number of vector pairs. (5 vector pairs are a reduction on the
+actual rank of the matrix.)</br></br>
+
+<table bgcolor=99cccc width=100%><tr><td>
+<font face=courier,monospace size=-1>
+
+LAB> N=reconstruct(V,5)</br>
+LAB> printvisual(N)</br></br>
+
+&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp man&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp hits&nbsp&nbsp&nbsp the&nbsp&nbsp&nbsp&nbsp ball&nbsp&nbsp&nbsp at&nbsp&nbsp&nbsp&nbsp&nbsp dog&nbsp&nbsp&nbsp&nbsp house&nbsp&nbsp takes&nbsp&nbsp to&nbsp&nbsp&nbsp&nbsp&nbsp walks&nbsp&nbsp a&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp in&nbsp&nbsp&nbsp&nbsp&nbsp small&nbsp&nbsp nice&nbsp&nbsp&nbsp barks</br>
+a&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.03&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.029&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.009&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.009&nbsp&nbsp 0.001&nbsp&nbsp 0.0</br>
+man&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.037&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp -0.001&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.023&nbsp&nbsp 0.001&nbsp&nbsp 0.07&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.002</br>
+hits&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.05&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.002&nbsp&nbsp 0.001&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+the&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.099&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.07&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.1&nbsp&nbsp&nbsp&nbsp 0.049&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+ball&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.026&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.017&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.003&nbsp&nbsp 0.042&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.001&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.002</br>
+at&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.019&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.001&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+takes&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.039&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.002&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+dog&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.018&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.005&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.007&nbsp&nbsp 0.013&nbsp&nbsp 0.019&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.001</br>
+to&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.069&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.003&nbsp&nbsp 0.001&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+walks&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.003&nbsp&nbsp 0.02&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.002&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.007&nbsp&nbsp -0.001&nbsp 0.001&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+in&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.009&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+every&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.011&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.009&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.007&nbsp&nbsp 0.003&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.001&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+small&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.004&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.004&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.001&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.001&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+nice&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.001&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.006&nbsp&nbsp 0.004&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp -0.001&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0
+
+</font>
+</td></tr></table>
+</br>
+
+<p align=right><a href=#scen1>(back to beginning of scenario)</a></p>
+
+<table width=100%><tr>
+<td><a name=scen2><H4>Singular value decomposition of streamed bigram data</H4></a></td>
+<td align=right>(<a href=#scenarios>scenarios top</a>)(<a href=#>top</a>)</td>
+</tr></table>
+
+In this scenario we make use of the Asymmetric Generalized Hebbian
+Algorithm. The AGHA implementation includes an option to compare the
+singular vectors to a reference set as they converge. This will be
+illustrated here by showing AGHA singular vectors converging on a
+vector set produced by the powers method implementation. To this end,
+we begin by loading the corpus "man_dog_corpus.txt" and creating from
+it a matrix of bigrams. This matrix is then decomposed using the batch
+method. This step brings us to the same place as the previous scenario
+left us, so if you are going through the scenarios in sequence you can
+jump over this stage. If you want to begin from scratch you will need
+to use the delete command to free up the variable names, or else use
+different variable names.</br></br>
+
+<table bgcolor=99cccc width=100%><tr><td>
+<font face=courier,monospace size=-1>
+
+LAB> C=corpus(man_dog_corpus.txt)</br>
+LAB> M=ngram(C,2,0,0)</br>
+LAB> V=svdbatch(M,5,0)</br>
+&nbsp Start time: Wed Oct 18 21:45:48 GMT 2006</br></br>
+
+&nbsp Calculating singular value decomposition. Values are:</br></br>
+
+&nbsp&nbsp&nbsp 0.17068256</br></br>
+
+&nbsp&nbsp&nbsp 0.09967616</br></br>
+
+&nbsp&nbsp&nbsp 0.09005333</br></br>
+
+&nbsp&nbsp&nbsp 0.05212273</br></br>
+
+&nbsp&nbsp&nbsp 0.025689691</br></br></br>
+
+
+&nbsp End time: Wed Oct 18 21:45:48 GMT 2006
+
+</font>
+</td></tr></table>
+</br>
+
+Having prepared the reference set, we are ready to run AGHA. Note that
+this implementation works equally well with the last argument omitted,
+that is to say, no reference set. Note the option to interrupt by
+hitting enter. This is of minor importance with the small corpora used
+here but with larger corpora can become very important, as runs start
+to take longer to complete. For example, you might feel that the
+convergence criterion has been set too stringently.</br></br>
+
+<table bgcolor=99cccc width=100%><tr><td>
+<font face=courier,monospace size=-1>
+
+LAB> W=svdincremental(C,2,5,0,0,0,V)</br>
+&nbsp Calculating SVD. Hit enter to interrupt.</br></br>
+
+&nbsp Training vector at 0, Wed Oct 18 21:46:01 GMT 2006</br>
+&nbsp Conv:5011.0&nbsp&nbsp Val1:0.1704&nbsp&nbsp&nbsp&nbsp Val2:0.1705&nbsp&nbsp&nbsp&nbsp LProx:1.0999&nbsp&nbsp&nbsp RProx:0.9999</br>
+&nbsp Training vector at 1, Wed Oct 18 21:46:04 GMT 2006</br>
+&nbsp Conv:550.0&nbsp&nbsp&nbsp Val1:0.0999&nbsp&nbsp&nbsp&nbsp Val2:0.0982&nbsp&nbsp&nbsp&nbsp LProx:0.9987&nbsp&nbsp&nbsp RProx:0.9987</br>
+&nbsp Exited on request. Wed Oct 18 21:46:05 GMT 2006
+
+</font>
+</td></tr></table>
+</br>
+
+The run is interrupted after the first vector pair has converged and
+the second has begun to train. Notice that the values LProx and RProx
+are close to 1, demonstrating good convergence with the vectors
+produced by the alternative algorithm. Note also that the first and
+second values are close to those obtained with the alternative
+algorithm. Later vectors take longer to converge. We complete the run
+with a less stringent convergence criterion. Where other methods won't
+allow an existing variable to be overwritten, running the incremental
+methods on an existing vectorset is assumed to be a request to add to
+that vectorset.</br></br>
+
+<table bgcolor=99cccc width=100%><tr><td>
+<font face=courier,monospace size=-1>
+
+LAB> W=svdincremental(C,2,5,0,0,3000,V)</br>
+&nbsp Calculating SVD. Hit enter to interrupt.</br></br>
+
+&nbsp Reloaded vectors at 0, first value:0.1704461, second value:0.17059378</br></br>
+
+&nbsp Training vector at 1, Wed Oct 18 21:46:22 GMT 2006</br>
+&nbsp Conv:3000.0&nbsp&nbsp Val1:0.0995&nbsp&nbsp&nbsp&nbsp Val2:0.0993&nbsp&nbsp&nbsp&nbsp LProx:0.9991&nbsp&nbsp&nbsp RProx:0.9991</br>
+&nbsp Training vector at 2, Wed Oct 18 21:46:26 GMT 2006</br>
+&nbsp Conv:3001.0&nbsp&nbsp Val1:0.0898&nbsp&nbsp&nbsp&nbsp Val2:0.0899&nbsp&nbsp&nbsp&nbsp LProx:0.9991&nbsp&nbsp&nbsp RProx:0.9991</br>
+&nbsp Training vector at 3, Wed Oct 18 21:46:32 GMT 2006</br>
+&nbsp Conv:3003.0&nbsp&nbsp Val1:0.0519&nbsp&nbsp&nbsp&nbsp Val2:0.0529&nbsp&nbsp&nbsp&nbsp LProx:-0.9999&nbsp&nbsp RProx:-0.9999</br>
+&nbsp Training vector at 4, Wed Oct 18 21:46:44 GMT 2006</br>
+&nbsp Conv:3000.0&nbsp&nbsp Val1:0.0255&nbsp&nbsp&nbsp&nbsp Val2:0.0256&nbsp&nbsp&nbsp&nbsp LProx:-0.9999&nbsp&nbsp RProx:-0.9999</br></br>
+
+&nbsp Done. Wed Oct 18 21:47:13 GMT 2006
+
+</font>
+</td></tr></table>
+</br>
+
+For simplicity, the version of of AGHA implemented here freezes each
+vector as it converges and moves onto the next. An alternative
+involves continuing to train all the vectors, allowing them to adapt
+somewhat to changing data.
+
+<p align=right><a href=#scen2>(back to beginning of scenario)</a></p>
+
+<table width=100%><tr>
+<td><a name=scen3><H4>Simple Latent Semantic Analysis</H4></a></td>
+<td align=right>(<a href=#scenarios>scenarios top</a>)(<a href=#>top</a>)</td>
+</tr></table>
+
+Latent Semantic Analysis is illustrated here using the batch method to
+perform the singular value decomposition. Clear all your variables
+using the deleteall command. We begin by loading the corpus
+"man_dog_lsa_corpus.txt", in which each line contains a textual
+passage. We create a matrix from this data and view it.</br></br>
+
+<table bgcolor=99cccc width=100%><tr><td>
+<font face=courier,monospace size=-1>
+
+LAB> C=corpus(man_dog_lsa_corpus.txt)</br>
+LAB> M=linewise(C,0,0)</br>
+LAB> printvisual(M)</br></br>
+
+&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 1&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 2&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 3&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 4&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 5&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 6&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 7</br>
+a&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+man&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0</br>
+hits&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+the&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 2.0&nbsp&nbsp&nbsp&nbsp 3.0&nbsp&nbsp&nbsp&nbsp 3.0&nbsp&nbsp&nbsp&nbsp 2.0&nbsp&nbsp&nbsp&nbsp 3.0&nbsp&nbsp&nbsp&nbsp 3.0&nbsp&nbsp&nbsp&nbsp 3.0&nbsp&nbsp&nbsp&nbsp 3.0</br>
+ball&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+at&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+dog&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0</br>
+house&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 1.0</br>
+takes&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+to&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 1.0</br>
+walks&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 1.0</br>
+
+</font>
+</td></tr></table>
+</br>
+
+Next, we perform entropy-based row normalisation on the matrix. We
+view this matrix, and notice that very common words have been
+down-weighted.</br></br>
+
+<table bgcolor=99cccc width=100%><tr><td>
+<font face=courier,monospace size=-1>
+
+LAB> P=preprocess(M)</br>
+LAB> printvisual(P)</br></br>
+
+&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 1&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 2&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 3&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 4&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 5&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 6&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 7</br>
+a&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.462&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.462&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+man&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.044&nbsp&nbsp 0.044&nbsp&nbsp 0.044&nbsp&nbsp 0.044&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.044&nbsp&nbsp 0.044&nbsp&nbsp 0.044</br>
+hits&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.326&nbsp&nbsp 0.326&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.326&nbsp&nbsp 0.0</br>
+the&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.007&nbsp&nbsp 0.008&nbsp&nbsp 0.008&nbsp&nbsp 0.007&nbsp&nbsp 0.008&nbsp&nbsp 0.008&nbsp&nbsp 0.008&nbsp&nbsp 0.008</br>
+ball&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.044&nbsp&nbsp 0.044&nbsp&nbsp 0.044&nbsp&nbsp 0.044&nbsp&nbsp 0.044&nbsp&nbsp 0.044&nbsp&nbsp 0.044&nbsp&nbsp 0.0</br>
+at&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.462&nbsp&nbsp 0.462&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+dog&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.095&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.095&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.095&nbsp&nbsp 0.095&nbsp&nbsp 0.095&nbsp&nbsp 0.095</br>
+house&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.231&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.231&nbsp&nbsp 0.231&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.231</br>
+takes&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.231&nbsp&nbsp 0.231&nbsp&nbsp 0.231&nbsp&nbsp 0.231&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0</br>
+to&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.095&nbsp&nbsp 0.095&nbsp&nbsp 0.095&nbsp&nbsp 0.095&nbsp&nbsp 0.095&nbsp&nbsp 0.095</br>
+walks&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.693</br>
+
+</font>
+</td></tr></table>
+</br>
+
+Now, we decompose the preprocessed matrix. We reconstruct it from a
+reduced number of vector pairs and view the result.</br></br>
+
+<table bgcolor=99cccc width=100%><tr><td>
+<font face=courier,monospace size=-1>
+
+LAB> V=svdbatch(P,7,0)</br>
+&nbsp Start time: Thu Oct 19 08:28:18 GMT 2006</br></br>
+
+&nbsp Calculating singular value decomposition. Values are:</br></br>
+
+&nbsp&nbsp&nbsp 0.9693445</br></br>
+
+&nbsp&nbsp&nbsp 0.7540605</br></br>
+
+&nbsp&nbsp&nbsp 0.60038245</br></br>
+
+&nbsp&nbsp&nbsp 0.4428855</br></br>
+
+&nbsp&nbsp&nbsp 0.3140704</br></br>
+
+&nbsp&nbsp&nbsp 0.22906853</br></br>
+
+&nbsp&nbsp&nbsp 0.07095801</br></br></br>
+
+
+&nbsp End time: Thu Oct 19 08:28:18 GMT 2006</br></br>
+
+LAB> LSA=reconstruct(V,4)</br>
+LAB> printvisual(LSA)</br></br>
+
+&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 1&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 2&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 3&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 4&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 5&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 6&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 7</br>
+a&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.458&nbsp&nbsp 0.018&nbsp&nbsp 0.001&nbsp&nbsp 0.46&nbsp&nbsp&nbsp 0.005&nbsp&nbsp 0.001&nbsp&nbsp -0.039&nbsp -0.001</br>
+man&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.045&nbsp&nbsp 0.05&nbsp&nbsp&nbsp 0.024&nbsp&nbsp 0.041&nbsp&nbsp 0.037&nbsp&nbsp 0.024&nbsp&nbsp 0.024&nbsp&nbsp 0.041</br>
+hits&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.329&nbsp&nbsp 0.389&nbsp&nbsp 0.01&nbsp&nbsp&nbsp -0.019&nbsp 0.031&nbsp&nbsp 0.01&nbsp&nbsp&nbsp 0.163&nbsp&nbsp -0.004</br>
+the&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.005&nbsp&nbsp 0.01&nbsp&nbsp&nbsp 0.007&nbsp&nbsp 0.007&nbsp&nbsp 0.01&nbsp&nbsp&nbsp 0.007&nbsp&nbsp 0.006&nbsp&nbsp 0.008</br>
+ball&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.04&nbsp&nbsp&nbsp 0.053&nbsp&nbsp 0.038&nbsp&nbsp 0.047&nbsp&nbsp 0.052&nbsp&nbsp 0.038&nbsp&nbsp 0.03&nbsp&nbsp&nbsp -0.001</br>
+at&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.449&nbsp&nbsp 0.412&nbsp&nbsp -0.026&nbsp 0.028&nbsp&nbsp -0.015&nbsp -0.026&nbsp 0.154&nbsp&nbsp 0.0</br>
+dog&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.03&nbsp&nbsp&nbsp 0.08&nbsp&nbsp&nbsp 0.06&nbsp&nbsp&nbsp 0.058&nbsp&nbsp 0.09&nbsp&nbsp&nbsp 0.06&nbsp&nbsp&nbsp 0.047&nbsp&nbsp 0.085</br>
+house&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.086&nbsp&nbsp 0.126&nbsp&nbsp 0.098&nbsp&nbsp 0.155&nbsp&nbsp 0.157&nbsp&nbsp 0.098&nbsp&nbsp 0.067&nbsp&nbsp 0.251</br>
+takes&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp -0.023&nbsp 0.003&nbsp&nbsp 0.191&nbsp&nbsp 0.258&nbsp&nbsp 0.252&nbsp&nbsp 0.191&nbsp&nbsp 0.042&nbsp&nbsp -0.005</br>
+to&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp -0.009&nbsp 0.033&nbsp&nbsp 0.084&nbsp&nbsp 0.098&nbsp&nbsp 0.12&nbsp&nbsp&nbsp 0.084&nbsp&nbsp 0.032&nbsp&nbsp 0.091</br>
+walks&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp -0.022&nbsp 0.023&nbsp&nbsp -0.029&nbsp 0.02&nbsp&nbsp&nbsp 0.022&nbsp&nbsp -0.029&nbsp -0.009&nbsp 0.687</br>
+
+</font>
+</td></tr></table>
+</br>
+
+This matrix is equivalent to our original matrix of wordbag data, but
+has been subjected to preprocessing and dimensionality reduction using
+SVD. Each column of the matrix describes a document. The documents can
+be compared to each other using the dot product operation. This is
+done here using the dotmatrix1 method. In order to observe the impact
+of LSA, a comparison matrix created from the original data is also
+presented. Notice how LSA increases the dissimilarity between
+documents that were previously rather more similar.</br></br>
+
+<table bgcolor=99cccc width=100%><tr><td>
+<font face=courier,monospace size=-1>
+
+LAB> Comp=dotmatrix1(LSA)</br>
+LAB> printvisual(Comp)</br></br>
+
+&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 1&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 2&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 3&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 4&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 5&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 6&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 7</br>
+0&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 0.782&nbsp&nbsp 0.001&nbsp&nbsp 0.553&nbsp&nbsp 0.072&nbsp&nbsp 0.001&nbsp&nbsp 0.615&nbsp&nbsp 0.015</br>
+1&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.782&nbsp&nbsp 0.999&nbsp&nbsp 0.113&nbsp&nbsp 0.139&nbsp&nbsp 0.214&nbsp&nbsp 0.113&nbsp&nbsp 0.955&nbsp&nbsp 0.133</br>
+2&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.001&nbsp&nbsp 0.113&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 0.561&nbsp&nbsp 0.977&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 0.321&nbsp&nbsp 0.096</br>
+3&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.553&nbsp&nbsp 0.139&nbsp&nbsp 0.561&nbsp&nbsp 0.999&nbsp&nbsp 0.579&nbsp&nbsp 0.561&nbsp&nbsp 0.088&nbsp&nbsp 0.158</br>
+4&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.072&nbsp&nbsp 0.214&nbsp&nbsp 0.977&nbsp&nbsp 0.579&nbsp&nbsp 0.999&nbsp&nbsp 0.977&nbsp&nbsp 0.4&nbsp&nbsp&nbsp&nbsp 0.289</br>
+5&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.001&nbsp&nbsp 0.113&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 0.561&nbsp&nbsp 0.977&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 0.321&nbsp&nbsp 0.096</br>
+6&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.615&nbsp&nbsp 0.955&nbsp&nbsp 0.321&nbsp&nbsp 0.088&nbsp&nbsp 0.4&nbsp&nbsp&nbsp&nbsp 0.321&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 0.093</br>
+7&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.015&nbsp&nbsp 0.133&nbsp&nbsp 0.096&nbsp&nbsp 0.158&nbsp&nbsp 0.289&nbsp&nbsp 0.096&nbsp&nbsp 0.093&nbsp&nbsp 0.999</br></br>
+
+LAB> Precomp=dotmatrix1(M)</br>
+LAB> printvisual(Precomp)</br></br>
+
+&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 1&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 2&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 3&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 4&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 5&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 6&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 7</br>
+0&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 0.845&nbsp&nbsp 0.76&nbsp&nbsp&nbsp 0.7&nbsp&nbsp&nbsp&nbsp 0.676&nbsp&nbsp 0.76&nbsp&nbsp&nbsp 0.845&nbsp&nbsp 0.676</br>
+1&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.845&nbsp&nbsp 0.999&nbsp&nbsp 0.785&nbsp&nbsp 0.76&nbsp&nbsp&nbsp 0.785&nbsp&nbsp 0.785&nbsp&nbsp 0.857&nbsp&nbsp 0.785</br>
+2&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.76&nbsp&nbsp&nbsp 0.785&nbsp&nbsp 0.999&nbsp&nbsp 0.845&nbsp&nbsp 0.928&nbsp&nbsp 0.999&nbsp&nbsp 0.928&nbsp&nbsp 0.857</br>
+3&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.7&nbsp&nbsp&nbsp&nbsp 0.76&nbsp&nbsp&nbsp 0.845&nbsp&nbsp 1.0&nbsp&nbsp&nbsp&nbsp 0.845&nbsp&nbsp 0.845&nbsp&nbsp 0.76&nbsp&nbsp&nbsp 0.76</br>
+4&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.676&nbsp&nbsp 0.785&nbsp&nbsp 0.928&nbsp&nbsp 0.845&nbsp&nbsp 0.999&nbsp&nbsp 0.928&nbsp&nbsp 0.857&nbsp&nbsp 0.857</br>
+5&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.76&nbsp&nbsp&nbsp 0.785&nbsp&nbsp 0.999&nbsp&nbsp 0.845&nbsp&nbsp 0.928&nbsp&nbsp 0.999&nbsp&nbsp 0.928&nbsp&nbsp 0.857</br>
+6&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.845&nbsp&nbsp 0.857&nbsp&nbsp 0.928&nbsp&nbsp 0.76&nbsp&nbsp&nbsp 0.857&nbsp&nbsp 0.928&nbsp&nbsp 0.999&nbsp&nbsp 0.857</br>
+7&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.676&nbsp&nbsp 0.785&nbsp&nbsp 0.857&nbsp&nbsp 0.76&nbsp&nbsp&nbsp 0.857&nbsp&nbsp 0.857&nbsp&nbsp 0.857&nbsp&nbsp 0.999</br>
+
+
+</font>
+</td></tr></table>
+</br>
+
+<p align=right><a href=#scen3>(back to beginning of scenario)</a></p>
+
+<table width=100%><tr>
+<td><a name=scen4><H4>Latent Semantic Analysis performed using the Generalized Hebbian Algorithm on streamed data</H4></a></td>
+<td align=right>(<a href=#scenarios>scenarios top</a>)(<a href=#>top</a>)</td>
+</tr></table>
+
+The GHA implementation used here is a sparse implementation (see
+Gorrell 2006). This means that the implementation will behave a little
+differently to the AGHA implementation. It is more efficient but has
+some restrictions. Because the actual eigenvector is only calculated
+after convergence, running eigenvalue estimates and proximities to the
+reference vectors are not presented.</br></br>
+
+LSA is done here using eigen decomposition as performed using GHA. LSA
+is originally performed using singular value decomposition, but the
+aim here is to create an approach that allows streamed wordbag data to
+be decomposed. Eigen decomposition is more appropriate in that case,
+and whilst only relationships between words are analysed here,
+document comparison data is readily derived. See Gorrell 2006 for more
+information.</br></br>
+
+We'll start, again, by preparing a reference corpus against which to
+compare the incremental algorithm. This is a slightly different
+procedure to that presented in the previous scenario, since a
+vectorset appropriate to an eigen decomposition needs to be
+prepared. As previously, the corpus is transformed into a matrix of
+wordbag data and preprocessed using the entropy-based row
+normalisation step. Then, the matrix is squared and decomposed. This
+creates a symmetrical vectorset describing the eigen decomposition of
+the matrix.</br></br>
+
+<table bgcolor=99cccc width=100%><tr><td>
+<font face=courier,monospace size=-1>
+
+LAB> C=corpus(man_dog_lsa_corpus.txt)</br>
+LAB> M=linewise(C,0,0)</br>
+LAB> P=preprocess(M)</br>
+LAB> N=sq2(P)</br>
+LAB> V=svdbatch(N,7,0)</br>
+&nbsp Start time: Thu Oct 19 10:09:07 GMT 2006</br></br>
+
+&nbsp Calculating singular value decomposition. Values are:</br></br>
+
+&nbsp&nbsp&nbsp 0.939629</br></br>
+
+&nbsp&nbsp&nbsp 0.5686071</br></br>
+
+&nbsp&nbsp&nbsp 0.36045918</br></br>
+
+&nbsp&nbsp&nbsp 0.19614753</br></br>
+
+&nbsp&nbsp&nbsp 0.09864017</br></br>
+
+&nbsp&nbsp&nbsp 0.05247238</br></br>
+
+&nbsp&nbsp&nbsp 0.005035039</br></br></br>
+
+
+&nbsp End time: Thu Oct 19 10:09:07 GMT 2006
+
+</font>
+</td></tr></table>
+</br>
+
+We then use the method ghalines to run GHA on the corpus. Again, there
+is the option to interrupt and to continue training an existing
+vectorset.</br></br>
+
+<table bgcolor=99cccc width=100%><tr><td>
+<font face=courier,monospace size=-1>
+
+LAB> W=ghalines(C,7,0,0,true,8,V)</br>
+&nbsp Calculating eigen decomposition. Hit enter to interrupt.</br></br>
+
+&nbsp Training vector at 0, Thu Oct 19 10:09:31 GMT 2006</br>
+&nbsp Value: 0.11623911, Proximity to reference: 0.99907833</br></br>
+
+&nbsp Training vector at 1, Thu Oct 19 10:09:36 GMT 2006</br>
+&nbsp Value: 0.070972025, Proximity to reference: -0.9988724</br></br>
+
+&nbsp Training vector at 2, Thu Oct 19 10:09:40 GMT 2006</br>
+&nbsp Value: 0.044844247, Proximity to reference: -0.99858403</br></br>
+
+&nbsp Training vector at 3, Thu Oct 19 10:09:48 GMT 2006</br>
+&nbsp Value: 0.02454521, Proximity to reference: -0.9988072</br></br>
+
+&nbsp Training vector at 4, Thu Oct 19 10:09:52 GMT 2006</br>
+&nbsp Value: 0.0122996075, Proximity to reference: 0.9992383</br></br>
+
+&nbsp Training vector at 5, Thu Oct 19 10:09:58 GMT 2006</br>
+&nbsp Value: 0.0065768217, Proximity to reference: 0.99935246</br></br>
+
+&nbsp Training vector at 6, Thu Oct 19 10:10:02 GMT 2006</br>
+&nbsp Value: 6.3016603E-4, Proximity to reference: -0.9999992</br></br>
+
+&nbsp Done. Thu Oct 19 10:10:18 GMT 2006
+
+</font>
+</td></tr></table>
+</br>
+
+We can view the resulting vectorset in a number of ways.</br></br>
+
+<table bgcolor=99cccc width=100%><tr><td>
+<font face=courier,monospace size=-1>
+
+LAB> print(V,4)</br></br>
+
+Vector number 0, first value:0.939629, second value:0.939629</br>
+at&nbsp&nbsp&nbsp&nbsp&nbsp 0.5811822&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp at&nbsp&nbsp&nbsp&nbsp&nbsp 0.5811822</br>
+a&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.51064724&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp a&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.51064724</br>
+hits&nbsp&nbsp&nbsp 0.47631145&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp hits&nbsp&nbsp&nbsp 0.47631145</br>
+house&nbsp&nbsp 0.28972858&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp house&nbsp&nbsp 0.28972858</br></br></br>
+
+
+Vector number 1, first value:0.5686071, second value:0.5686071</br>
+walks&nbsp&nbsp 0.8477034&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp walks&nbsp&nbsp 0.8477034</br>
+house&nbsp&nbsp 0.33561593&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp house&nbsp&nbsp 0.33561593</br>
+to&nbsp&nbsp&nbsp&nbsp&nbsp 0.17097634&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp to&nbsp&nbsp&nbsp&nbsp&nbsp 0.17097634</br>
+takes&nbsp&nbsp 0.14199504&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp takes&nbsp&nbsp 0.14199504</br></br></br>
+
+
+Vector number 2, first value:0.36045918, second value:0.36045918</br>
+takes&nbsp&nbsp 0.60974735&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp takes&nbsp&nbsp 0.60974735</br>
+a&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.47362345&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp a&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.47362345</br>
+to&nbsp&nbsp&nbsp&nbsp&nbsp 0.18766229&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp to&nbsp&nbsp&nbsp&nbsp&nbsp 0.18766229</br>
+house&nbsp&nbsp 0.1315186&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp house&nbsp&nbsp 0.1315186</br></br></br>
+
+
+Vector number 3, first value:0.19614753, second value:0.19614753</br>
+takes&nbsp&nbsp 0.4491289&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp takes&nbsp&nbsp 0.4491289</br>
+hits&nbsp&nbsp&nbsp 0.2955041&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp hits&nbsp&nbsp&nbsp 0.2955041</br>
+house&nbsp&nbsp 0.23123907&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp house&nbsp&nbsp 0.23123907</br>
+to&nbsp&nbsp&nbsp&nbsp&nbsp 0.22518648&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp to&nbsp&nbsp&nbsp&nbsp&nbsp 0.22518648</br></br></br>
+
+
+Vector number 4, first value:0.09864017, second value:0.09864017</br>
+hits&nbsp&nbsp&nbsp 0.4580067&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp hits&nbsp&nbsp&nbsp 0.4580067</br>
+dog&nbsp&nbsp&nbsp&nbsp 0.37131807&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp dog&nbsp&nbsp&nbsp&nbsp 0.37131807</br>
+to&nbsp&nbsp&nbsp&nbsp&nbsp 0.24050336&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp to&nbsp&nbsp&nbsp&nbsp&nbsp 0.24050336</br>
+walks&nbsp&nbsp 0.15090357&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp walks&nbsp&nbsp 0.15090357</br></br></br>
+
+
+Vector number 5, first value:0.05247238, second value:0.05247238</br>
+at&nbsp&nbsp&nbsp&nbsp&nbsp 0.54812956&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp at&nbsp&nbsp&nbsp&nbsp&nbsp 0.54812956</br>
+takes&nbsp&nbsp 0.35036454&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp takes&nbsp&nbsp 0.35036454</br>
+dog&nbsp&nbsp&nbsp&nbsp 0.22442931&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp dog&nbsp&nbsp&nbsp&nbsp 0.22442931</br>
+walks&nbsp&nbsp 0.16723712&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp walks&nbsp&nbsp 0.16723712</br></br></br>
+
+
+Vector number 6, first value:0.005035039, second value:0.005035039</br>
+man&nbsp&nbsp&nbsp&nbsp 0.52956504&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp man&nbsp&nbsp&nbsp&nbsp 0.52956504</br>
+takes&nbsp&nbsp 0.22013327&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp takes&nbsp&nbsp 0.22013327</br>
+to&nbsp&nbsp&nbsp&nbsp&nbsp 0.1358404&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp  to&nbsp&nbsp&nbsp&nbsp&nbsp 0.1358404</br>
+walks&nbsp&nbsp 0.12014492&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp walks&nbsp&nbsp 0.12014492</br></br>
+
+LAB> R=reconstruct(V,4)</br>
+LAB> printvisual(R)</br></br>
+
+&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp a&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp man&nbsp&nbsp&nbsp&nbsp hits&nbsp&nbsp&nbsp the&nbsp&nbsp&nbsp&nbsp ball&nbsp&nbsp&nbsp at&nbsp&nbsp&nbsp&nbsp&nbsp dog&nbsp&nbsp&nbsp&nbsp house&nbsp&nbsp takes&nbsp&nbsp to&nbsp&nbsp&nbsp&nbsp&nbsp walks</br>
+a&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.425&nbsp&nbsp 0.04&nbsp&nbsp&nbsp 0.143&nbsp&nbsp 0.006&nbsp&nbsp 0.04&nbsp&nbsp&nbsp 0.22&nbsp&nbsp&nbsp 0.04&nbsp&nbsp&nbsp 0.111&nbsp&nbsp 0.108&nbsp&nbsp 0.041&nbsp&nbsp 0.0</br>
+man&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.04&nbsp&nbsp&nbsp 0.011&nbsp&nbsp 0.039&nbsp&nbsp 0.002&nbsp&nbsp 0.01&nbsp&nbsp&nbsp 0.044&nbsp&nbsp 0.018&nbsp&nbsp 0.039&nbsp&nbsp 0.029&nbsp&nbsp 0.018&nbsp&nbsp 0.028</br>
+hits&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.143&nbsp&nbsp 0.039&nbsp&nbsp 0.288&nbsp&nbsp 0.007&nbsp&nbsp 0.04&nbsp&nbsp&nbsp 0.332&nbsp&nbsp 0.051&nbsp&nbsp 0.091&nbsp&nbsp 0.007&nbsp&nbsp 0.018&nbsp&nbsp -0.002</br>
+the&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.006&nbsp&nbsp 0.002&nbsp&nbsp 0.007&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.002&nbsp&nbsp 0.007&nbsp&nbsp 0.004&nbsp&nbsp 0.008&nbsp&nbsp 0.007&nbsp&nbsp 0.004&nbsp&nbsp 0.005</br>
+ball&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.04&nbsp&nbsp&nbsp 0.01&nbsp&nbsp&nbsp 0.04&nbsp&nbsp&nbsp 0.002&nbsp&nbsp 0.013&nbsp&nbsp 0.043&nbsp&nbsp 0.019&nbsp&nbsp 0.035&nbsp&nbsp 0.04&nbsp&nbsp&nbsp 0.019&nbsp&nbsp -0.001</br>
+at&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.22&nbsp&nbsp&nbsp 0.044&nbsp&nbsp 0.332&nbsp&nbsp 0.007&nbsp&nbsp 0.043&nbsp&nbsp 0.398&nbsp&nbsp 0.051&nbsp&nbsp 0.098&nbsp&nbsp -0.009&nbsp 0.011&nbsp&nbsp 0.0</br>
+dog&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.04&nbsp&nbsp&nbsp 0.018&nbsp&nbsp 0.051&nbsp&nbsp 0.004&nbsp&nbsp 0.019&nbsp&nbsp 0.051&nbsp&nbsp 0.036&nbsp&nbsp 0.072&nbsp&nbsp 0.062&nbsp&nbsp 0.038&nbsp&nbsp 0.059</br>
+house&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.111&nbsp&nbsp 0.039&nbsp&nbsp 0.091&nbsp&nbsp 0.008&nbsp&nbsp 0.035&nbsp&nbsp 0.098&nbsp&nbsp 0.072&nbsp&nbsp 0.159&nbsp&nbsp 0.117&nbsp&nbsp 0.079&nbsp&nbsp 0.174</br>
+takes&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.108&nbsp&nbsp 0.029&nbsp&nbsp 0.007&nbsp&nbsp 0.007&nbsp&nbsp 0.04&nbsp&nbsp -0.009&nbsp&nbsp 0.062&nbsp&nbsp 0.117&nbsp&nbsp 0.206&nbsp&nbsp 0.089&nbsp&nbsp -0.003</br>
+to&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.041&nbsp&nbsp 0.018&nbsp&nbsp 0.018&nbsp&nbsp 0.004&nbsp&nbsp 0.019&nbsp&nbsp 0.011&nbsp&nbsp 0.038&nbsp&nbsp 0.079&nbsp&nbsp 0.089&nbsp&nbsp 0.049&nbsp&nbsp 0.063</br>
+walks&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.028&nbsp&nbsp -0.002&nbsp 0.005&nbsp&nbsp -0.001&nbsp 0.0&nbsp&nbsp&nbsp&nbsp 0.059&nbsp&nbsp 0.174&nbsp&nbsp -0.003&nbsp 0.063&nbsp&nbsp 0.476
+
+</font>
+</td></tr></table>
+</br>
+
+Next steps would involve using the vectorset to map test document sets
+to new locations, completing the LSA process, either inside or outside
+of GHA Lab. This kind of functionality is not currently implemented
+however.
+
+<p align=right>(<a href=#scen4>back to beginning of scenario</a>)(<a href=#scenarios>scenarios top</a>)</p>
+
+<table width=100%><tr>
+<td><a name=commands><H3>Command Summary</H3></a></td>
+<td align=right>(<a href=#>top</a>)</td>
+</tr></table>
+
+This section presents a summary of the available commands. Capitalised
+words indicate user-specified variable names. Angle brackets surround
+user-specified information. This information is also available via the
+help command in GHA Lab.</br></br>
+
+<b>Corpus=corpus(&#60;filename&#62;)</b> - given a filename (quotes
+not necessary) loads the file into the variablename Corpus.</br></br>
+
+<b>Vectorset=vectorset(&#60;filename&#62;)</b> - given a filename of a
+saved vectorset, loads the vectorset into the variablename
+Vectorset.</br></br>
+
+<b>Vectorset=leftvectors(&#60;filename&#62;)</b> - given a filename of
+a plain text file of new line separated vectors, loads the left side
+of a vectorset into the variable Vectorset.</br></br>
+
+<b>Vectorset=rightvectors(&#60;filename&#62;)</b> - given a filename
+of a plain text file of new line separated vectors, loads the right
+side of a vectorset into the variable Vectorset.</br></br>
+
+<b>save(Vectorset, &#60;filename&#62;)</b> - saves the vectorset
+Vectorset to the given file location (quotes not necessary.)</br></br>
+
+<b>delete(Variable)</b> - deletes the given variable.</br></br>
+
+<b>deleteall()</b> - deletes all the variables.</br></br>
+
+<b>help()</b> - summarises all functions.</br></br>
+
+<b>help(&#60;functionname&#62;)</b> - prints help for the given
+function name.</br></br>
+
+<b>printall()</b> - summarises all the variables currently in
+memory.</br></br>
+
+<b>print(Variable)</b> - summarises the given variable.</br></br>
+
+<b>print(Vectorset, &#60;n&#62;)</b> - for each vector pair, prints
+the n items most strongly represented in the vector.</br></br>
+
+<b>printvisual(Matrix)</b> - prints the given matrix to the screen in
+a format designed to be readable.</br></br>
+
+<b>printvisual(Matrix, &#60;filename&#62;)</b> - prints the given
+matrix to the given file location in a format designed to be
+readable.</br></br>
+
+<b>printmachine(Matrix)</b> - prints the given matrix to the screen in
+a format designed to be easy to read in using a computer
+program.</br></br>
+
+<b>printmachine(Matrix, &#60;filename&#62;)</b> - prints the given
+matrix to the given file location in a format designed to be easy to
+read in using a computer program.</br></br>
+
+<b>Matrix=linewise(Corpus, &#60;rowlen&#62;, &#60;columnlen&#62;)</b>
+- creates a matrix from the given corpus, lines as columns and words
+as rows. Specifying row and column length allows vectors to be fixed
+in size allowing reduced memory footprint at the expense of some
+accuracy. Enter 0 to keep rows/columns perfectly orthogonal.</br></br>
+
+<b>Matrix=linewise(Corpus, &#60;rowlen&#62;, &#60;columnlen&#62;)</b>
+- creates a matrix from the given corpus, passages as columns and
+words as rows. Passages are blank line separated. Specifying row and
+column length allows vectors to be fixed in size allowing reduced
+memory footprint at the expense of some accuracy. Enter 0 to keep
+rows/columns perfectly orthogonal.</br></br>
+
+<b>Matrix=preprepared(Corpus)</b> - reads a matrix from a file into a
+variable. The matrix file comprises a line of tab separated column
+headers, a line of tab separated row headers and one tab separated
+line of numbers for each row of the matrix.</br></br>
+
+<b>Matrix=ngram(Corpus, &#60;n&#62;, &#60;rowlen&#62;,
+&#60;columnlen&#62;)</b> - creates a matrix from a text file. The
+matrix describes ngrams, with unique n-1grams as rows and unigrams as
+columns. Each ngram increments a cell count by 1. n specifies the n to
+be used. Specifying row and column length allows vectors to be fixed
+in size allowing reduced memory footprint at the expense of some
+accuracy. Enter 0 to keep rows/columns perfectly orthogonal.</br></br>
+
+<b>Matrix1=sq1(Matrix2)</b> - multiplies Matrix1 by its transpose and
+returns the result in Matrix2.</br></br>
+
+<b>Matrix1=sq2(Matrix2)</b> - multiplies the transpose of Matrix1 by
+Matrix1 and returns the result in Matrix2.</br></br>
+
+<b>Matrix1=dotmatrix1(Matrix2)</b> - Computes a matrix of dot products
+in which every normalised column vector in Matrix2 is compared to every
+other.</br></br>
+
+<b>Matrix1=dotmatrix2(Matrix2)</b> - Computes a matrix of dot products
+in which every normalised row vector in Matrix2 is compared to every
+other.</br></br>
+
+<b>Matrix1=preprocess(Matrix2)</b> - applies 1-entropy preprocessing to
+Matrix1 and returns the result in Matrix2.</br></br>
+
+<b>Matrix=reconstruct(Vectorset, &#60;vecnum&#62;)</b> - Given a
+vectorset and a number, creates a matrix from the given number of
+vector pairs.</br></br>
+
+<b>Vectorset=svdbatch(Matrix, &#60;vecnum&#62;, &#60;conv&#62;)</b> -
+given a matrix, uses a simple method to perform singular value
+decomposition and return a vectorset containing left and right
+orthonormal bases and value sets. Specify the number of vector pairs
+to calculate as the second argument and the convergence criterion as
+the third argument. Enter 0 and a default of 0.001 will be
+used.</br></br>
+
+<b>Vectorset=svdincremental(Corpus, &#60;n&#62;, &#60;vecnum&#62;,
+&#60;rowlen&#62;, &#60;columnlen&#62;, &#60;conv&#62;)</b> - given a
+corpus, performs incremental SVD taking each ngram as a datapoint. n
+is the number of words in the ngram, vecnum is the number of vector
+pairs to calculate. Specifying row and column length allows vectors to
+be fixed in size allowing reduced memory footprint at the expense of
+some accuracy. Enter 0 to keep rows/columns perfectly
+orthogonal. Specify a convergence criterion as the final argument, or
+give 0 and a default of 5000 will be used.</br></br>
+
+<b>Vectorset=svdincremental(Corpus, &#60;n&#62;, &#60;vecnum&#62;,
+&#60;rowlen&#62;, &#60;columnlen&#62;, &#60;conv&#62;, Vectorset)</b>
+- as above, but the final argument is a vectorset to which the vectors
+being calculated will be compared as they converge.</br></br>
+
+<b>Vectorset=ghapassages(Corpus, &#60;vecnum&#62;, &#60;rowlen&#62;,
+&#60;conv&#62;, &#60;weighting&#62;, &#60;epochsize&#62;)</b> - runs
+the Generalized Hebbian Algorithm on a corpus, treating each blank
+line separated text passage as a datapoint. vecnum is the number of
+vectors to calculate. Specifying a row length allows vectors to be
+fixed in size allowing reduced memory footprint at the expense of some
+accuracy. Enter 0 to keep rows perfectly orthogonal. Specify a
+convergence criterion as the next argument, or 0 to use the default of
+0.001. Set weighting to true to use LSA-style entropy
+normalisation. epochsize is a heuristic measure only relevant if you
+are using weighting. With moderate corpus sizes, set this to the
+number of items in your corpus.</br></br>
+
+<b>Vectorset=ghapassages(Corpus, &#60;vecnum&#62;, &#60;rowlen&#62;,
+&#60;conv&#62;, &#60;weighting&#62;, &#60;epochsize&#62;,
+Vectorset)</b> - as above, but the final argument is a vectorset to
+which the vectors being calculated will be compared as they
+converge.</br></br>
+
+<b>Vectorset=ghalines(Corpus, &#60;vecnum&#62;, &#60;rowlen&#62;,
+&#60;conv&#62;, &#60;weighting&#62;, &#60;epochsize&#62;)</b> - runs
+the Generalized Hebbian Algorithm on a corpus, treating each line as a
+datapoint. vecnum is the number of vectors to calculate. Specifying a
+row length allows vectors to be fixed in size allowing reduced memory
+footprint at the expense of some accuracy. Enter 0 to keep rows
+perfectly orthogonal. Specify a convergence criterion as the next
+argument, or 0 to use the default of 0.001. Set weighting to true to
+use LSA-style entropy normalisation. epochsize is a heuristic measure
+only relevant if you are using weighting. With moderate corpus sizes,
+set this to the number of items in your corpus.</br></br>
+
+<b>Vectorset=ghalines(Corpus, &#60;vecnum&#62;, &#60;rowlen&#62;,
+&#60;conv&#62;, &#60;weighting&#62;, &#60;epochsize&#62;,
+Vectorset)</b> - as above, but the final argument is a vectorset to
+which the vectors being calculated will be compared as they
+converge.</br></br>
+
+<b>Vectorset=ghacachecolumns(Corpus, &#60;vecnum&#62;,
+&#60;rowlen&#62;, &#60;conv&#62;, &#60;weighting&#62;,
+&#60;epochsize&#62;)</b> - runs the Generalized Hebbian Algorithm on a
+corpus, treating each line as a matrix column presented as a sparse
+vector. Vector format is a comma-separated string of numbers
+alternating indices with values. For example, a vector containing two
+non-zero items 20 and 30 at indices 2 and 3 would be presented
+2,20,3,30. The algorithm doesn't need to know the dimensionality of
+the vectors. The corpus is cached for efficiency. vecnum is the number
+of vectors to calculate. Specifying a row length allows vectors to be
+fixed in size allowing reduced memory footprint at the expense of some
+accuracy. Enter 0 to keep rows perfectly orthogonal. Specify a
+convergence criterion as the next argument, or 0 to use the default of
+0.001. Set weighting to true to use LSA-style entropy
+normalisation. epochsize is a heuristic measure only relevant if you
+are using weighting. With moderate corpus sizes, set this to the
+number of items in your corpus.</br></br>
+
+<b>Vectorset=ghacachecolumns(Corpus, &#60;vecnum&#62;,
+&#60;rowlen&#62;, &#60;conv&#62;, &#60;weighting&#62;,
+&#60;epochsize&#62;, Vectorset)</b> - as above, but the final argument
+is a vectorset to which the vectors being calculated will be compared
+as they converge.</br></br>
+
+<b>Vectorset=ghaprepcolumns(Corpus, &#60;vecnum&#62;,
+&#60;rowlen&#62;, &#60;conv&#62;, &#60;weighting&#62;,
+&#60;epochsize&#62;)</b> - runs the Generalized Hebbian Algorithm on a
+corpus, treating each line as a matrix column presented as a sparse
+vector. Vector format is a comma-separated string of numbers
+alternating indices with values. For example, a vector containing two
+non-zero items 20 and 30 at indices 2 and 3 would be presented
+2,20,3,30. The algorithm doesn't need to know the dimensionality of
+the vectors. vecnum is the number of vectors to calculate. Specifying
+a row length allows vectors to be fixed in size allowing reduced
+memory footprint at the expense of some accuracy. Enter 0 to keep rows
+perfectly orthogonal. Specify a convergence criterion as the next
+argument, or 0 to use the default of 0.001. Set weighting to true to
+use LSA-style entropy normalisation. epochsize is a heuristic measure
+only relevant if you are using weighting. With moderate corpus sizes,
+set this to the number of items in your corpus.</br></br>
+
+<b>Vectorset=ghaprepcolumns(Corpus, &#60;vecnum&#62;,
+&#60;rowlen&#62;, &#60;conv&#62;, &#60;weighting&#62;,
+&#60;epochsize&#62;, Vectorset)</b> - as above, but the final argument
+is a vectorset to which the vectors being calculated will be compared
+as they converge.</br></br>
+
+<b>Vectorset=ghacolumns(Corpus, &#60;vecnum&#62;, &#60;conv&#62;,
+&#60;weighting&#62;, &#60;epochsize&#62;)</b> - runs the Generalized
+Hebbian Algorithm on a corpus, treating each column of a preprepared
+matrix as a datapoint. vecnum is the number of vectors to
+calculate. Specifying a row length allows vectors to be fixed in size
+allowing reduced memory footprint at the expense of some
+accuracy. Enter 0 to keep rows perfectly orthogonal. Specify a
+convergence criterion as the next argument, or 0 to use the default of
+0.001. Set weighting to true to use LSA-style entropy
+normalisation. epochsize is a heuristic measure only relevant if you
+are using weighting. With moderate corpus sizes, set this to the
+number of items in your corpus.</br></br>
+
+<b>Vectorset=ghacolumns(Corpus, &#60;vecnum&#62;, &#60;conv&#62;,
+&#60;weighting&#62;, &#60;epochsize&#62;, Vectorset)</b> - as above,
+but the final argument is a vectorset to which the vectors being
+calculated will be compared as they converge.
+
+<p align=right>(<a href=#commands>back to beginning of commands</a>)</p>
+
+</body>
